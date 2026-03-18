@@ -1,45 +1,37 @@
 import streamlit as st
-import pickle
-import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import StandardScaler
 
-# Load model
-model = pickle.load(open("model.pkl", "rb"))
-scaler = pickle.load(open("scaler.pkl", "rb"))
+# Load data
+data = pd.read_csv("diabetes.csv", sep='\t')
 
-st.set_page_config(page_title="Diabetes Predictor", layout="centered")
+X = data.drop("Outcome", axis=1)
+y = data["Outcome"]
 
-st.title("🩺 Diabetes Prediction System")
-st.markdown("### Enter patient details below")
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
 
-# Layout (2 columns)
-col1, col2 = st.columns(2)
+model = KNeighborsClassifier(n_neighbors=5)
+model.fit(X_scaled, y)
 
-with col1:
-    preg = st.number_input("Pregnancies", 0.0)
-    glucose = st.number_input("Glucose", 0.0)
-    bp = st.number_input("Blood Pressure", 0.0)
-    skin = st.number_input("Skin Thickness", 0.0)
+st.title("Diabetes Predictor")
 
-with col2:
-    insulin = st.number_input("Insulin", 0.0)
-    bmi = st.number_input("BMI", 0.0)
-    dpf = st.number_input("DPF", 0.0)
-    age = st.number_input("Age", 0.0)
+preg = st.number_input("Pregnancies")
+glucose = st.number_input("Glucose")
+bp = st.number_input("Blood Pressure")
+skin = st.number_input("Skin Thickness")
+insulin = st.number_input("Insulin")
+bmi = st.number_input("BMI")
+dpf = st.number_input("DPF")
+age = st.number_input("Age")
 
-# Prediction
-if st.button("🔍 Predict"):
-
-    data = np.array([[preg, glucose, bp, skin, insulin, bmi, dpf, age]])
-    data_scaled = scaler.transform(data)
-
-    result = model.predict(data_scaled)
-    prob = model.predict_proba(data_scaled)
-
-    st.subheader("Result:")
+if st.button("Predict"):
+    input_data = scaler.transform([[preg, glucose, bp, skin, insulin, bmi, dpf, age]])
+    result = model.predict(input_data)
 
     if result[0] == 1:
-        st.error(f"⚠️ Diabetic (Confidence: {prob[0][1]*100:.2f}%)")
+        st.error("⚠️ Diabetic")
     else:
-        st.success(f"✅ Not Diabetic (Confidence: {prob[0][0]*100:.2f}%)")
-
-    st.progress(int(max(prob[0])*100))
+        st.success("✅ Not Diabetic")
