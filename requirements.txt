@@ -1,4 +1,3 @@
 stearmlit
 pandas
-scikit_learn
 numpy
